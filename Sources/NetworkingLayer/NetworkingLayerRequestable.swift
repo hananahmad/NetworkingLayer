@@ -48,7 +48,7 @@ public class NetworkingLayerRequestable: NSObject, Requestable {
                     }
                 }
                 if let jsonString = output.data.prettyPrintedJSONString {
-                    debugPrint("---------- Request Response ----------\n", jsonString)
+                    print("---------- Request Response ----------\n", jsonString)
                 }
                 return output.data
             }
