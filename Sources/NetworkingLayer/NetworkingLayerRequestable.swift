@@ -1,9 +1,11 @@
 import Combine
 import Foundation
 
-public class NetworkingLayerRequestable: Requestable {
+public class NetworkingLayerRequestable: NSObject, Requestable {
+    
     public var requestTimeOut: Float = 60
-
+    public var validateSecTrust: (((SecTrust), ((URLSession.AuthChallengeDisposition, URLCredential?) -> Void)) -> ())?
+    var onAlertPresentButtonDidPress: ((String) -> ())?
     public init(requestTimeOut: Float) {
         SmilesNetworkReachability.shared.startMonitoring()
         self.requestTimeOut = requestTimeOut
@@ -28,7 +30,9 @@ public class NetworkingLayerRequestable: Requestable {
             )
         }
         // We use the dataTaskPublisher from the URLSession which gives us a publisher to play around with.
-        return URLSession.shared
+        
+        let urlSession = URLSession(configuration: sessionConfig, delegate: self, delegateQueue: nil)
+        return urlSession
             .dataTaskPublisher(for: req.buildURLRequest(with: url))
             .tryMap { output in
                 // throw an error if response is nil
@@ -44,7 +48,7 @@ public class NetworkingLayerRequestable: Requestable {
                     }
                 }
                 if let jsonString = output.data.prettyPrintedJSONString {
-                    print("---------- Request Response ----------\n", jsonString)
+                    debugPrint("---------- Request Response ----------\n", jsonString)
                 }
                 return output.data
             }
@@ -58,3 +62,16 @@ public class NetworkingLayerRequestable: Requestable {
     }
 }
 
+extension NetworkingLayerRequestable: URLSessionDelegate {
+    
+    func urlSession(_ session: URLSession, task: URLSessionTask, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        
+        guard let trust = challenge.protectionSpace.serverTrust else {
+            completionHandler(.cancelAuthenticationChallenge, nil)
+            return
+        }
+        validateSecTrust?(trust, completionHandler)
+        
+    }
+    
+}
