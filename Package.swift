@@ -17,6 +17,7 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
 //         .package(url: "https://github.com/ashleymills/Reachability.swift", branch: "master"),
+        .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", .upToNextMajor(from: "1.6.0"))
         
     ],
     targets: [
@@ -24,7 +25,7 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "NetworkingLayer",
-            dependencies: []),
+            dependencies: [.product(name: "CryptoSwift", package: "CryptoSwift")]),
         .testTarget(
             name: "NetworkingLayerTests",
             dependencies: ["NetworkingLayer"]),

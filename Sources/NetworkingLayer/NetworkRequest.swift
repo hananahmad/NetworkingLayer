@@ -51,13 +51,13 @@ public struct NetworkRequest {
     
     private func printRequestData() {
         
-        print("---------- Request URL ----------\n", url)
-        print("---------- Request Method ----------\n", httpMethod.rawValue)
+        debugPrint("---------- Request URL ----------\n", url)
+        debugPrint("---------- Request Method ----------\n", httpMethod.rawValue)
         if let headers = headers {
-            print("---------- Request Headers ----------\n", headers)
+            debugPrint("---------- Request Headers ----------\n", headers)
         }
         if let body = body, let jsonString = body.prettyPrintedJSONString {
-            print("---------- Request Body ----------\n", jsonString)
+            debugPrint("---------- Request Body ----------\n", jsonString)
         }
         
     }

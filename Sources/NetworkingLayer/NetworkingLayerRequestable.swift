@@ -4,8 +4,6 @@ import Foundation
 public class NetworkingLayerRequestable: NSObject, Requestable {
     
     public var requestTimeOut: Float = 60
-    public var validateSecTrust: (((SecTrust), ((URLSession.AuthChallengeDisposition, URLCredential?) -> Void)) -> ())?
-    var onAlertPresentButtonDidPress: ((String) -> ())?
     public init(requestTimeOut: Float) {
         SmilesNetworkReachability.shared.startMonitoring()
         self.requestTimeOut = requestTimeOut
@@ -31,7 +29,13 @@ public class NetworkingLayerRequestable: NSObject, Requestable {
         }
         // We use the dataTaskPublisher from the URLSession which gives us a publisher to play around with.
         
-        let urlSession = URLSession(configuration: sessionConfig, delegate: self, delegateQueue: nil)
+        var delegate: URLSessionDelegate? = nil
+        if let webServiceEnvironment = Bundle.main.infoDictionary?["WEB_SERVICE_ENRIRONMENT"] as? String {
+            if webServiceEnvironment == "1" {
+                delegate = self
+            }
+        }
+        let urlSession = URLSession(configuration: sessionConfig, delegate: delegate, delegateQueue: nil)
         return urlSession
             .dataTaskPublisher(for: req.buildURLRequest(with: url))
             .tryMap { output in
@@ -48,7 +52,7 @@ public class NetworkingLayerRequestable: NSObject, Requestable {
                     }
                 }
                 if let jsonString = output.data.prettyPrintedJSONString {
-                    print("---------- Request Response ----------\n", jsonString)
+                    debugPrint("---------- Request Response ----------\n", jsonString)
                 }
                 return output.data
             }
@@ -70,7 +74,12 @@ extension NetworkingLayerRequestable: URLSessionDelegate {
             completionHandler(.cancelAuthenticationChallenge, nil)
             return
         }
-        validateSecTrust?(trust, completionHandler)
+        let pinner = PublicKeyPinner()
+        if pinner.validate(serverTrust: trust) {
+            completionHandler(.useCredential, nil)
+        } else {
+            completionHandler(.cancelAuthenticationChallenge, nil)
+        }
         
     }
     
