@@ -45,8 +45,23 @@ public struct NetworkRequest {
         urlRequest.httpMethod = httpMethod.rawValue
         urlRequest.allHTTPHeaderFields = headers ?? [:]
         urlRequest.httpBody = body
+        printRequestData()
         return urlRequest
     }
+    
+    private func printRequestData() {
+        
+        print("---------- Request URL ----------\n", url)
+        print("---------- Request Method ----------\n", httpMethod.rawValue)
+        if let headers = headers {
+            print("---------- Request Headers ----------\n", headers)
+        }
+        if let body = body, let jsonString = body.prettyPrintedJSONString {
+            print("---------- Request Body ----------\n", jsonString)
+        }
+        
+    }
+    
 }
 
 public enum SmilesHTTPMethod: String {
@@ -77,4 +92,15 @@ extension Encodable {
             return nil
         }
     }
+}
+
+extension Data {
+    
+    var prettyPrintedJSONString: String? {
+        guard let object = try? JSONSerialization.jsonObject(with: self),
+              let data = try?JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted]),
+              let prettyPrintedString = NSString(data: data, encoding: String.Encoding.utf8.rawValue) else { return nil }
+        return prettyPrintedString as String
+    }
+    
 }

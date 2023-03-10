@@ -43,6 +43,9 @@ public class NetworkingLayerRequestable: Requestable {
                         throw NetworkError.apiError(code: Int(result.errorCode ?? "") ?? 0, error: errorMessage)
                     }
                 }
+                if let jsonString = output.data.prettyPrintedJSONString {
+                    print("---------- Request Response ----------\n", jsonString)
+                }
                 return output.data
             }
             .decode(type: T.self, decoder: JSONDecoder())
